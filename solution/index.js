@@ -31,8 +31,8 @@ function addTaskClickEvent(event) {
         return;
     }
     const listElement=target.parentElement.querySelector("ul")
-    const listItemElement=createElement("li", [inputValue],["list-item"])
-    listElement.append(listItemElement)
+    const newListItemElement=createElement("li", [inputValue],["task"])
+    listElement.insertBefore(newListItemElement, listElement.childNodes[0]);
     switch(target.id){
         case "submit-add-to-do":
             localStorageObject.todo.unshift(inputValue)
@@ -48,10 +48,30 @@ function addTaskClickEvent(event) {
     input.value="";
 }
 
-localStorage.setItem("tasks","");
-const localStorageObject={
+function generationTasklistFromLocalStorage(obj){
+    let numberOfSection=0
+    for(const property in obj){
+        const tasks=obj[property]
+        for(const task of tasks){
+            const listElement=document.querySelectorAll("ul")[numberOfSection]
+            const newListItemElement=createElement("li", [task],["task"])
+            listElement.appendChild(newListItemElement)
+        }
+        numberOfSection++;
+    }
+}
+
+let localStorageObject={
     "todo":[],
     "in-progress":[],
     "done":[],
 }
+if(localStorage.getItem("tasks")===null){
+    localStorage.setItem("tasks","");
+    localStorage.tasks=JSON.stringify(localStorageObject);
+} else {
+    localStorageObject=JSON.parse(localStorage.getItem("tasks"));
+    generationTasklistFromLocalStorage(localStorageObject);
+}
+
 document.querySelector("main").addEventListener("click", addTaskClickEvent)
