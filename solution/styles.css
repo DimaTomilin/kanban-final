@@ -13,3 +13,15 @@ section{
     text-align: center;
     padding: 10px;
 }
+
+ul{
+    padding: 3px;
+}
+
+li{
+    list-style-type: none;
+    border: 1px solid;
+    margin: 5px;
+    text-align: left;
+    padding: 3px;
+}
