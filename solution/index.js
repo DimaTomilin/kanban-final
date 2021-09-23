@@ -61,6 +61,26 @@ function generationTasklistFromLocalStorage(obj){
     }
 }
 
+function dblclickEditTaskEvent(event){
+    const targetElement=event.target
+    if(targetElement.tagName!=="LI"){
+        return;
+    }
+    let valueOfItem=targetElement.innerHTML
+    targetElement.setAttribute("contenteditable","true")
+    targetElement.addEventListener("blur", ()=>{
+        for(const section in localStorageObject){
+            let propertyArray=localStorageObject[section]
+            if(propertyArray.includes(valueOfItem)){
+                propertyArray[propertyArray.indexOf(valueOfItem)]=targetElement.innerHTML
+            }
+         }
+        localStorage.tasks=JSON.stringify(localStorageObject)
+        targetElement.setAttribute("contenteditable","false")  
+    })
+}
+
+
 let localStorageObject={
     "todo":[],
     "in-progress":[],
@@ -75,3 +95,4 @@ if(localStorage.getItem("tasks")===null){
 }
 
 document.querySelector("main").addEventListener("click", addTaskClickEvent)
+document.querySelector("main").addEventListener("dblclick", dblclickEditTaskEvent)
