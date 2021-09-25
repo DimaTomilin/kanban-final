@@ -127,6 +127,23 @@ function replaceOfTask (event) {
     };
 }
 
+function searchTasks(){
+    const input=document.getElementById("search")
+    const valueInInput=input.value.toLowerCase()
+    document.querySelectorAll("ul")
+    for(let list of document.querySelectorAll("ul")){
+        list.innerHTML=""
+    }
+    generationTasklistFromLocalStorage(localStorageObject)
+    const allTasks=document.querySelectorAll(".task")
+    for(let task of allTasks){
+        const taskValue=task.innerHTML.toLowerCase()
+        if(!taskValue.includes(valueInInput)){
+            task.parentElement.removeChild(task)
+        }
+    }
+}
+
 let localStorageObject={
     "todo":[],
     "in-progress":[],
@@ -143,3 +160,4 @@ if(localStorage.getItem("tasks")===null){
 document.querySelector("main").addEventListener("click", addTaskClickEvent)
 document.querySelector("main").addEventListener("dblclick", dblclickEditTaskEvent)
 document.addEventListener("mouseover", replaceOfTask);
+document.getElementById("search").addEventListener("input", searchTasks)
