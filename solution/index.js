@@ -69,6 +69,11 @@ function dblclickEditTaskEvent(event){
     let valueOfItem=targetElement.innerHTML
     targetElement.setAttribute("contenteditable","true")
     targetElement.addEventListener("blur", ()=>{
+        if(targetElement.innerHTML===""){
+            alert("You can`t save empty task");
+            targetElement.innerHTML=valueOfItem;
+            return;
+        }
         for(const section in localStorageObject){
             let propertyArray=localStorageObject[section]
             if(propertyArray.includes(valueOfItem)){
