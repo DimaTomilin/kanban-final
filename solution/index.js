@@ -80,6 +80,52 @@ function dblclickEditTaskEvent(event){
     })
 }
 
+function replaceOfTask (event) {
+    if(event.target.tagName!=="LI"){
+        return;
+    }
+    const targetElement=event.target
+    window.onkeydown = function (event2) {
+        if(!event2.code.includes("Digit")){
+            return
+        }
+        if(event2.altKey===false){
+            return
+        }
+        const key=parseInt(event2.key)
+        if(key>3){
+            return
+        }
+        let newParentElement;
+        let newLocalStorageArray;
+        switch(key){
+            case 1:
+                newParentElement=document.querySelector(".to-do-tasks")
+                newLocalStorageArray=localStorageObject.todo
+                break;
+            case 2:
+                newParentElement=document.querySelector(".in-progress-tasks")
+                newLocalStorageArray=localStorageObject["in-progress"]
+                break;
+            case 3:
+                newParentElement=document.querySelector(".done-tasks")
+                newLocalStorageArray=localStorageObject.done
+                break;
+        }
+        newParentElement.insertBefore(targetElement, newParentElement.childNodes[0]);
+        for(const section in localStorageObject){
+            let propertyArray=localStorageObject[section]
+            if(propertyArray.includes(targetElement.innerHTML)){
+                const indexOfElement=propertyArray.indexOf(targetElement.innerHTML);
+                const arrayElement=propertyArray[indexOfElement]
+                propertyArray.splice(indexOfElement, 1)
+                newLocalStorageArray.unshift(arrayElement)
+            }
+        }
+        localStorage.tasks=JSON.stringify(localStorageObject)
+        window.onkeydown=null;
+    };
+}
 
 let localStorageObject={
     "todo":[],
@@ -96,3 +142,4 @@ if(localStorage.getItem("tasks")===null){
 
 document.querySelector("main").addEventListener("click", addTaskClickEvent)
 document.querySelector("main").addEventListener("dblclick", dblclickEditTaskEvent)
+document.addEventListener("mouseover", replaceOfTask);
