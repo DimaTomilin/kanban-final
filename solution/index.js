@@ -19,6 +19,14 @@ function createElement(tagName, children = [], classes = [], attributes = {}, ev
     return  el
 }
 
+function displayLoading(){
+    loaderElement.classList.add("loader")
+}
+
+function hideLoading(){
+    loaderElement.classList.remove("loader")
+}
+
 function addTaskClickEvent(event) {
     const target=event.target
     if(target.tagName!=="BUTTON"){
@@ -81,8 +89,6 @@ function dblclickEditTaskEvent(event){
             }
          }
         localStorage.tasks=JSON.stringify(localStorageObject)
-        targetElement.setAttribute("contenteditable","false")  
-    })
 }
 
 function replaceOfTask (event) {
@@ -132,14 +138,20 @@ function replaceOfTask (event) {
     };
 }
 
+function refreshTaskSection(){
+    const allListsOfTasks=document.querySelectorAll("ul")
+    for(let list of allListsOfTasks){
+        while (list.firstChild) {
+            list.removeChild(list.firstChild);
+        }
+    }
+    generationTasklistFromLocalStorage(localStorageObject)
+}
+
 function searchTasks(){
     const input=document.getElementById("search")
     const valueInInput=input.value.toLowerCase()
-    document.querySelectorAll("ul")
-    for(let list of document.querySelectorAll("ul")){
-        list.innerHTML=""
-    }
-    generationTasklistFromLocalStorage(localStorageObject)
+    refreshTaskSection();
     const allTasks=document.querySelectorAll(".task")
     for(let task of allTasks){
         const taskValue=task.innerHTML.toLowerCase()
@@ -148,6 +160,45 @@ function searchTasks(){
         }
     }
 }
+
+ async function saveToStorage(){
+    displayLoading();
+    const response = await fetch("https://json-bins.herokuapp.com/bin/614ee0bfc092dca86cb87689", { //send request to API
+        method: "PUT" ,
+        headers: {
+            'Accept': "application/json" ,
+            'Content-Type': "application/json",
+        },
+        body: JSON.stringify({"tasks": localStorageObject})
+    })
+    hideLoading();
+    if(!response.ok){ // error part: behavior of all elements in error situation anf throw ERROR with current status
+        alert("ERROR "+response.status+". "+response.statusText)//displaying in result element at error message
+        throw `ERROR ${response.status}`
+    }
+    
+}
+
+async function loadFromStorage(){
+    displayLoading();
+    const response =await fetch("https://json-bins.herokuapp.com/bin/614ee0bfc092dca86cb87689")
+    if(!response.ok){ // error part: behavior of all elements in error situation anf throw ERROR with current status
+        alert("ERROR "+response.status+". "+response.statusText)//displaying in result element at error message
+        throw `ERROR ${response.status}`
+    }
+    hideLoading();
+    const tasksOBjectFromStorage=(await response.json()).tasks
+    localStorageObject=tasksOBjectFromStorage;
+    localStorage.tasks=JSON.stringify(localStorageObject);
+    
+    refreshTaskSection();
+    
+}
+
+
+const loaderElement = document.querySelector("#loader")
+
+//Function of displaying loading element in the page
 
 let localStorageObject={
     "todo":[],
@@ -166,3 +217,5 @@ document.querySelector("main").addEventListener("click", addTaskClickEvent)
 document.querySelector("main").addEventListener("dblclick", dblclickEditTaskEvent)
 document.addEventListener("mouseover", replaceOfTask);
 document.getElementById("search").addEventListener("input", searchTasks)
+document.getElementById("save-btn").addEventListener("click", saveToStorage)
+document.getElementById("load-btn").addEventListener("click", loadFromStorage)

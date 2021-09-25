@@ -25,3 +25,24 @@ li{
     text-align: left;
     padding: 3px;
 }
+
+.storage-button{
+    margin-top: 20px;
+}
+
+
+.loader{
+    margin-top: 50px;
+    border: 50px solid lightgray; 
+    border-top: 50px solid rgb(97, 97, 255); 
+    border-radius: 50%;
+    width: 500px;
+    height: 500px;
+    display: block;
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
