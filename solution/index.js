@@ -39,7 +39,9 @@ function addTaskClickEvent(event) {
         return;
     }
     const listElement=target.parentElement.querySelector("ul")
-    const newListItemElement=createElement("li", [inputValue],["task"])
+    const starIconElement=createElement("i",[],["fa", "fa-star"])
+    const textElement=createElement("div",[inputValue],["task-text"])
+    const newListItemElement=createElement("li", [textElement, starIconElement],["task"],{draggable:"true"},{"dblclick": dblclickEditTaskEvent, "mouseover": replaceOfTask, "dragstart": dragEvent})
     listElement.insertBefore(newListItemElement, listElement.childNodes[0]);
     switch(target.id){
         case "submit-add-to-do":
@@ -62,7 +64,9 @@ function generationTasklistFromLocalStorage(obj){
         const tasks=obj[property]
         for(const task of tasks){
             const listElement=document.querySelectorAll("ul")[numberOfSection]
-            const newListItemElement=createElement("li", [task],["task"])
+            const starIconElement=createElement("i",[],["fa", "fa-star"])
+            const textElement=createElement("div",[task],["task-text"])
+            const newListItemElement=createElement("li", [textElement, starIconElement],["task"],{draggable:"true"},{"dblclick": dblclickEditTaskEvent, "mouseover": replaceOfTask, "dragstart": dragEvent})
             listElement.appendChild(newListItemElement)
         }
         numberOfSection++;
@@ -70,32 +74,40 @@ function generationTasklistFromLocalStorage(obj){
 }
 
 function dblclickEditTaskEvent(event){
-    const targetElement=event.target
-    if(targetElement.tagName!=="LI"){
-        return;
-    }
-    let valueOfItem=targetElement.innerHTML
+    const targetElement=event.target.closest("li").querySelector(".task-text")
+    let valueOfItem=targetElement.textContent
     targetElement.setAttribute("contenteditable","true")
+    targetElement.focus()
     targetElement.addEventListener("blur", ()=>{
-        if(targetElement.innerHTML===""){
+        if(targetElement.textContent===""){
             alert("You can`t save empty task");
-            targetElement.innerHTML=valueOfItem;
+            targetElement.textContent=valueOfItem;
+            targetElement.setAttribute("contenteditable","false")
             return;
         }
         for(const section in localStorageObject){
             let propertyArray=localStorageObject[section]
             if(propertyArray.includes(valueOfItem)){
-                propertyArray[propertyArray.indexOf(valueOfItem)]=targetElement.innerHTML
+                propertyArray[propertyArray.indexOf(valueOfItem)]=targetElement.innerText
             }
-         }
+        }
         localStorage.tasks=JSON.stringify(localStorageObject)
+        console.log(localStorage.tasks)
+        targetElement.setAttribute("contenteditable","false")
+    })
 }
 
-function replaceOfTask (event) {
-    if(event.target.tagName!=="LI"){
-        return;
+function removeReplacingElement(elementValue){
+    for(const section in localStorageObject){
+        let propertyArray=localStorageObject[section]
+        if(propertyArray.includes(elementValue)){
+            const indexOfElement=propertyArray.indexOf(elementValue);
+            propertyArray.splice(indexOfElement, 1)
+        }
     }
-    const targetElement=event.target
+}
+function replaceOfTask (event) {
+    const targetElement=event.target.closest("li")
     window.onkeydown = function (event2) {
         if(!event2.code.includes("Digit")){
             return
@@ -124,15 +136,8 @@ function replaceOfTask (event) {
                 break;
         }
         newParentElement.insertBefore(targetElement, newParentElement.childNodes[0]);
-        for(const section in localStorageObject){
-            let propertyArray=localStorageObject[section]
-            if(propertyArray.includes(targetElement.innerHTML)){
-                const indexOfElement=propertyArray.indexOf(targetElement.innerHTML);
-                const arrayElement=propertyArray[indexOfElement]
-                propertyArray.splice(indexOfElement, 1)
-                newLocalStorageArray.unshift(arrayElement)
-            }
-        }
+        removeReplacingElement(targetElement.innerText)
+        newLocalStorageArray.unshift(targetElement.innerText)
         localStorage.tasks=JSON.stringify(localStorageObject)
         window.onkeydown=null;
     };
@@ -154,7 +159,7 @@ function searchTasks(){
     refreshTaskSection();
     const allTasks=document.querySelectorAll(".task")
     for(let task of allTasks){
-        const taskValue=task.innerHTML.toLowerCase()
+        const taskValue=task.innerText.toLowerCase()
         if(!taskValue.includes(valueInInput)){
             task.parentElement.removeChild(task)
         }
@@ -195,10 +200,57 @@ async function loadFromStorage(){
     
 }
 
+function dragEvent (event){
+    draggingElement=event.target.closest("li")
+    event.dataTransfer.setData("text", event.target.closest("ul").className);
+    const sections = document.querySelectorAll("section")
+    for(let section of sections){
+        section.addEventListener("dragover", allowDrop)
+        section.addEventListener("drop", dropEvent)
+    }
+}
+
+function allowDrop(event) {
+    event.preventDefault();
+}
+
+function dropEvent(event) {
+    event.preventDefault();
+    const previousParentClassName=event.dataTransfer.getData("text");
+    const newSectionClass = event.target.closest("section").className
+    const newParentList=event.target.closest("section").querySelector("ul")
+    const valueOfDraggingElement=draggingElement.textContent
+    switch(newSectionClass){
+        case "dropzone":
+            newParentList.insertBefore(draggingElement, newParentList.childNodes[0]);
+            removeReplacingElement(valueOfDraggingElement);
+            let localStorageArray;
+            switch(newParentList.className){
+                case "in-progress-tasks":
+                    localStorageArray=localStorageObject["in-progress"]
+                    break;
+                case "to-do-tasks":
+                    localStorageArray=localStorageObject["todo"]
+                    break;
+                case "done-tasks":
+                    localStorageArray=localStorageObject["done"]
+                    break;
+            }
+            localStorageArray.unshift(valueOfDraggingElement)
+            localStorage.tasks=JSON.stringify(localStorageObject)
+            break;
+        case "removezone":
+            document.querySelector(`.${previousParentClassName}`).removeChild(draggingElement);
+            removeReplacingElement(valueOfDraggingElement);
+            localStorage.tasks=JSON.stringify(localStorageObject)
+            break;
+    }
+}
+
+
+let draggingElement;
 
 const loaderElement = document.querySelector("#loader")
-
-//Function of displaying loading element in the page
 
 let localStorageObject={
     "todo":[],
@@ -214,8 +266,7 @@ if(localStorage.getItem("tasks")===null){
 }
 
 document.querySelector("main").addEventListener("click", addTaskClickEvent)
-document.querySelector("main").addEventListener("dblclick", dblclickEditTaskEvent)
-document.addEventListener("mouseover", replaceOfTask);
 document.getElementById("search").addEventListener("input", searchTasks)
 document.getElementById("save-btn").addEventListener("click", saveToStorage)
 document.getElementById("load-btn").addEventListener("click", loadFromStorage)
+

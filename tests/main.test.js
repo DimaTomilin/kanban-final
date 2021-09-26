@@ -113,7 +113,7 @@ let wasInPut = false
 
 describe(projectName, () => {
   beforeAll(async () => {
-    browser = await puppeteer.launch({ headless: true }) //change to false if you want to view the page
+    browser = await puppeteer.launch({ headless: false, slowMo:40 }) //change to false if you want to view the page
     page = await browser.newPage()
     page.setRequestInterception(true)
     page.on('request', async (req) => {

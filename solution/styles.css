@@ -19,7 +19,8 @@ ul{
 }
 
 li{
-    list-style-type: none;
+    display: flex;
+    justify-content: space-between;
     border: 1px solid;
     margin: 5px;
     text-align: left;
@@ -30,6 +31,9 @@ li{
     margin-top: 20px;
 }
 
+.removezone{
+    border: none;
+}
 
 .loader{
     margin-top: 50px;
@@ -45,4 +49,8 @@ li{
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+div[contenteditable]{
+    width: 90%;
 }
