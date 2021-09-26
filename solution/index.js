@@ -27,6 +27,13 @@ function hideLoading(){
     loaderElement.classList.remove("loader")
 }
 
+function createNewLiELement(value){
+    const starIconElement=createElement("i",[],["fa", "fa-star"])
+    const textElement=createElement("div",[value],[])
+    const newListItemElement=createElement("li", [textElement, starIconElement],["task"],{draggable:"true"},{"dblclick": dblclickEditTaskEvent, "mouseover": replaceOfTask, "dragstart": dragEvent})
+    return newListItemElement;
+}
+
 function addTaskClickEvent(event) {
     const target=event.target
     if(target.tagName!=="BUTTON"){
@@ -39,9 +46,7 @@ function addTaskClickEvent(event) {
         return;
     }
     const listElement=target.parentElement.querySelector("ul")
-    const starIconElement=createElement("i",[],["fa", "fa-star"])
-    const textElement=createElement("div",[inputValue],["task-text"])
-    const newListItemElement=createElement("li", [textElement, starIconElement],["task"],{draggable:"true"},{"dblclick": dblclickEditTaskEvent, "mouseover": replaceOfTask, "dragstart": dragEvent})
+    const newListItemElement=createNewLiELement(inputValue)
     listElement.insertBefore(newListItemElement, listElement.childNodes[0]);
     switch(target.id){
         case "submit-add-to-do":
@@ -64,9 +69,7 @@ function generationTasklistFromLocalStorage(obj){
         const tasks=obj[property]
         for(const task of tasks){
             const listElement=document.querySelectorAll("ul")[numberOfSection]
-            const starIconElement=createElement("i",[],["fa", "fa-star"])
-            const textElement=createElement("div",[task],["task-text"])
-            const newListItemElement=createElement("li", [textElement, starIconElement],["task"],{draggable:"true"},{"dblclick": dblclickEditTaskEvent, "mouseover": replaceOfTask, "dragstart": dragEvent})
+            const newListItemElement=createNewLiELement(task)
             listElement.appendChild(newListItemElement)
         }
         numberOfSection++;
@@ -74,14 +77,13 @@ function generationTasklistFromLocalStorage(obj){
 }
 
 function dblclickEditTaskEvent(event){
-    const targetElement=event.target.closest("li").querySelector(".task-text")
-    let valueOfItem=targetElement.textContent
+    const targetElement=event.target
+    let valueOfItem=targetElement.innerText
     targetElement.setAttribute("contenteditable","true")
-    targetElement.focus()
     targetElement.addEventListener("blur", ()=>{
-        if(targetElement.textContent===""){
+        if(targetElement.innerText===""){
             alert("You can`t save empty task");
-            targetElement.textContent=valueOfItem;
+            targetElement.innerText=valueOfItem;
             targetElement.setAttribute("contenteditable","false")
             return;
         }
