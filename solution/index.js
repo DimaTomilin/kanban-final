@@ -28,8 +28,8 @@ function hideLoading(){
 }
 
 function createNewLiELement(value){
-    const starIconElement=createElement("i",[],["fa", "fa-star"],{},{"click": addToImportantTasks})
-    const textElement=createElement("div",[value],[])
+    const starIconElement=createElement("i",[],["fa", "fa-star"],{},{"click": toggleToImportantTasks})
+    const textElement=createElement("div",[value])
     const newListItemElement=createElement("li", [textElement, starIconElement],["task"],{draggable:"true"},{"dblclick": dblclickEditTaskEvent, "mouseover": replaceOfTask, "dragstart": dragEvent})
     return newListItemElement;
 }
@@ -77,6 +77,7 @@ function generationTasklistFromLocalStorage(obj){
 }
 
 function dblclickEditTaskEvent(event){
+    event.preventDefault();
     const targetElement=event.target
     let valueOfItem=targetElement.innerText
     targetElement.setAttribute("contenteditable","true")
@@ -87,6 +88,10 @@ function dblclickEditTaskEvent(event){
             targetElement.setAttribute("contenteditable","false")
             return;
         }
+        if(importantTasksArray.includes(valueOfItem)){
+            importantTasksArray[importantTasksArray.indexOf(valueOfItem)]=targetElement.innerText
+            localStorage.important=JSON.stringify(importantTasksArray)
+        }
         for(const section in localStorageObject){
             let propertyArray=localStorageObject[section]
             if(propertyArray.includes(valueOfItem)){
@@ -94,7 +99,6 @@ function dblclickEditTaskEvent(event){
             }
         }
         localStorage.tasks=JSON.stringify(localStorageObject)
-        console.log(localStorage.tasks)
         targetElement.setAttribute("contenteditable","false")
     })
 }
@@ -154,6 +158,7 @@ function refreshTaskSection(){
         }
     }
     generationTasklistFromLocalStorage(localStorageObject)
+    generationImportantTasksFromLocalStorage(importantTasksArray)
 }
 
 function searchTasks(){
@@ -245,20 +250,24 @@ function dropEvent(event) {
         case "removezone":
             document.querySelector(`.${previousParentClassName}`).removeChild(draggingElement);
             removeReplacingElement(valueOfDraggingElement);
+            if(importantTasksArray.includes(valueOfDraggingElement)){
+                importantTasksArray.splice(importantTasksArray.indexOf(valueOfDraggingElement), 1)
+                localStorage.important=JSON.stringify(importantTasksArray)
+            }
             localStorage.tasks=JSON.stringify(localStorageObject)
             break;
     }
 }
 
-function addToImportantTasks(event){
+function toggleToImportantTasks(event){
     const target=event.target;
     const task=target.closest("li").firstChild.innerText
-    if(target.className.includes("important")){
-        target.classList.remove("important")
+    if(target.closest("li").className.includes("important")){
+        target.closest("li").classList.remove("important")
         importantTasksArray.splice(importantTasksArray.indexOf(task), 1);
         localStorage.important=JSON.stringify(importantTasksArray)
     } else {
-        target.classList.add("important")
+        target.closest("li").classList.add("important")
         importantTasksArray.unshift(task)
         localStorage.important=JSON.stringify(importantTasksArray)
     }
@@ -270,7 +279,7 @@ function generationImportantTasksFromLocalStorage(importantTasksArray){
     for(const task of allTasksElements){
         for(const importantTask of importantTasksArray){
             if(task.firstChild.innerText===importantTask){
-                task.querySelector(".fa").classList.add("important")
+                task.classList.add("important")
             }
         }
     }
