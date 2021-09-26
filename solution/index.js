@@ -45,7 +45,7 @@ function addTaskClickEvent(event) {
         alert ("You can`t add empty task.")
         return;
     }
-    const listElement=target.parentElement.querySelector("ul")
+    const listElement=target.closest("section").querySelector("ul")
     const newListItemElement=createNewLiELement(inputValue)
     listElement.insertBefore(newListItemElement, listElement.childNodes[0]);
     switch(target.id){
