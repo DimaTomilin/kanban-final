@@ -28,7 +28,7 @@ function hideLoading(){
 }
 
 function createNewLiELement(value){
-    const starIconElement=createElement("i",[],["fa", "fa-star"])
+    const starIconElement=createElement("i",[],["fa", "fa-star"],{},{"click": addToImportantTasks})
     const textElement=createElement("div",[value],[])
     const newListItemElement=createElement("li", [textElement, starIconElement],["task"],{draggable:"true"},{"dblclick": dblclickEditTaskEvent, "mouseover": replaceOfTask, "dragstart": dragEvent})
     return newListItemElement;
@@ -108,6 +108,7 @@ function removeReplacingElement(elementValue){
         }
     }
 }
+
 function replaceOfTask (event) {
     const targetElement=event.target.closest("li")
     window.onkeydown = function (event2) {
@@ -249,6 +250,32 @@ function dropEvent(event) {
     }
 }
 
+function addToImportantTasks(event){
+    const target=event.target;
+    const task=target.closest("li").firstChild.innerText
+    if(target.className.includes("important")){
+        target.classList.remove("important")
+        importantTasksArray.splice(importantTasksArray.indexOf(task), 1);
+        localStorage.important=JSON.stringify(importantTasksArray)
+    } else {
+        target.classList.add("important")
+        importantTasksArray.unshift(task)
+        localStorage.important=JSON.stringify(importantTasksArray)
+    }
+    
+}
+
+function generationImportantTasksFromLocalStorage(importantTasksArray){
+    const allTasksElements=document.querySelectorAll("li")
+    for(const task of allTasksElements){
+        for(const importantTask of importantTasksArray){
+            if(task.firstChild.innerText===importantTask){
+                task.querySelector(".fa").classList.add("important")
+            }
+        }
+    }
+}
+
 
 let draggingElement;
 
@@ -259,12 +286,17 @@ let localStorageObject={
     "in-progress":[],
     "done":[],
 }
+let importantTasksArray=[];
 if(localStorage.getItem("tasks")===null){
+    localStorage.setItem("important","")
     localStorage.setItem("tasks","");
+    localStorage.important=JSON.stringify(importantTasksArray)
     localStorage.tasks=JSON.stringify(localStorageObject);
 } else {
+    importantTasksArray=JSON.parse(localStorage.getItem("important"));
     localStorageObject=JSON.parse(localStorage.getItem("tasks"));
     generationTasklistFromLocalStorage(localStorageObject);
+    generationImportantTasksFromLocalStorage(importantTasksArray)
 }
 
 document.querySelector("main").addEventListener("click", addTaskClickEvent)
