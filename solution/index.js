@@ -203,7 +203,6 @@ async function loadFromStorage(){
     const tasksOBjectFromStorage=(await response.json()).tasks
     localStorageObject=tasksOBjectFromStorage;
     localStorage.tasks=JSON.stringify(localStorageObject);
-    
     refreshTaskSection();
     
 }

@@ -14,8 +14,9 @@ body{
 h1{
     text-align: center;
     font-size: 80px;
+    font-weight: bold;
     font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-    text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white;
+
 }
 
 main{
@@ -71,7 +72,7 @@ section button{
     margin: 10px;
     border: 1px solid black;
     border-radius: 3px;
-    background-color: darkgreen;
+    background-color: rgb(28, 151, 28);
 }
 
 section input{
@@ -102,7 +103,7 @@ section input{
 }
 
 .loader{
-    margin-top: 20px;
+    margin-top: 40px;
     margin-bottom: 50px !important;
     margin-left: 43.3%;
     border: 25px solid lightgray; 
