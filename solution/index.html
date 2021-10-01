@@ -1,13 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="./index.js" defer></script>
-    <link rel="stylesheet" href="./styles.css" />
-    <title>Tasks manager</title>
-</head>
-<body>
-</body>
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="./index.js" defer></script>
+        <link rel="stylesheet" href="./styles.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        <link rel="shortcut icon" type="image/png" href="../images/icon-image.png">
+        <title>Tasks manager</title>
+    </head>
+    <body>
+    <h1 id="page-title">My tasks bord</h1>
+    <input id="search" type="text" placeholder="Search task..."></input>
+    <main>
+        <section class="dropzone" >
+            <div>
+                <h2>Tasks I need to do</h2>
+                <ul class="to-do-tasks">
+                </ul>
+            </div>
+            <div>
+                <input id="add-to-do-task" type="text" placeholder="Add task..."></input>
+                <button id="submit-add-to-do">Submit</button>
+            </div>
+        </section>
+        <section class="dropzone" >
+            <div>
+                <h2>Tasks in progress</h2>
+                <ul class="in-progress-tasks">
+                </ul>
+            </div>
+            <div>
+                <input id="add-in-progress-task" type="text" placeholder="Add task..."></input>
+                <button id="submit-add-in-progress">Submit</button>
+            </div>
+        </section>
+        <section class="dropzone" >
+            <div>
+                <h2>Done tasks</h2>
+                <ul class="done-tasks">
+                </ul>
+            </div>
+            <div>
+                <input id="add-done-task" type="text" placeholder="Add task..."></input>
+                <button id="submit-add-done">Submit</button>
+            </div>
+        </section>
+    </main>
+    <section class="removezone">
+            <img src="../images/remove-image.png">
+    </section>
+    <div class="API-buttons">
+        <button id="load-btn" class="storage-button">Load</button>
+        <button id="save-btn" class="storage-button">Save</button>
+    </div>
+    <div id="loader"></div>
+    </body>
 </html>
