@@ -31,59 +31,49 @@ function hideLoading(){
 }
 
 // Function of creating structure of all <li> elements with argument of value
-function createNewLiELement(value){
+function createNewTaskElement(value){
     const starIconElement=createElement("i",[],["fa", "fa-star"],{},{"click": toggleToImportantTasks})
     const textElement=createElement("div",[value]) //Adding div element to more comfortable using with other functions
-    const newListItemElement=createElement("li", [textElement, starIconElement],["task"],{draggable:"true"},{"dblclick": dblclickEditTaskEvent, "mouseover": replaceOfTask, "dragstart": dragEvent})
-    return newListItemElement;
+    const newTasklement=createElement("li", [textElement, starIconElement],["task"],{draggable:"true"},{"dblclick": dblclickEditTaskEvent, "mouseover": replaceOfTask, "dragstart": dragEvent})
+    return newTasklement;
+}
+
+function validateTask(taskText = '') {
+    if (typeof taskText === 'string' && taskText.length) {
+      return taskText;
+    }
+  
+    throw Error('Invalid Task');
+}
+
+function updateTasks(task, taskType){
+   const currentTasks = getFromStorage();
+
+   currentTasks[taskType].unshift(validateTask(task));
+   updateStorage(currentTasks);
+
+   refreshTaskSection(currentTasks);
 }
 
 //Function of event listener that addes new task to target list
 function addTaskClickEvent(event) {
-    const target = event.target
+    const input = event.target.closest("section").querySelector("input")
+    const taskType = event.target.dataset.type;
 
-    
-    if(target.tagName !== "BUTTON"){ 
-        return;
-    }
-
-    //checking if input field empty and show alert message
-    const input = target.previousElementSibling
-    let inputValue = input.value
-    if(inputValue === ""){
-        alert ("You can`t add empty task.")
-        return;
-    }
-
-    const listElement = target.closest("section").querySelector("ul");
-    const newListItemElement = createNewLiELement(inputValue);
-    listElement.insertBefore(newListItemElement, listElement.childNodes[0]);
-    switch(target.id){
-        case "submit-add-to-do":
-            localStorageObject.todo.unshift(inputValue)
-            break;
-        case "submit-add-in-progress":
-            localStorageObject["in-progress"].unshift(inputValue)
-            break;
-        case "submit-add-done":
-            localStorageObject.done.unshift(inputValue)
-            break;
-    }
-    localStorage.tasks = JSON.stringify(localStorageObject);
+    updateTasks(input.value, taskType);
     input.value = "";
+    
 }
 
 //Fucntion of creating all tasks element from localStorageObject that my object of localStorage
-function generationTasklistFromLocalStorage(obj){
-    let numberOfSection=0
-    for(const property in obj){
-        const tasks=obj[property]
-        for(const task of tasks){
-            const listElement=document.querySelectorAll("ul")[numberOfSection]
-            const newListItemElement=createNewLiELement(task)
-            listElement.appendChild(newListItemElement)
-        }
-        numberOfSection++;
+function generationTasklist(){
+    const allTasks = getFromStorage()
+    for(const [taskType, taskList] of Object.entries(allTasks)){
+        const taskListElement = document.querySelector(`[data-type=${taskType}]`).closest("section").querySelector("ul");
+        
+        taskList.forEach(function(task) {
+            taskListElement.appendChild(createNewTaskElement(task));
+        });
     }
 }
 
@@ -167,22 +157,26 @@ function replaceOfTask (event) {
     };
 }
 
-//Deleting of all <li> elements and generates anew
-function refreshTaskSection(){
+//Deleting all task from DOM
+function deletingAllTasks(){
     const allListsOfTasks = document.querySelectorAll("ul")
     for(let list of allListsOfTasks){
         while (list.firstChild) {
             list.removeChild(list.firstChild);
         }
     }
-    generationTasklistFromLocalStorage(localStorageObject)
+}
+
+//Refresh of all tasks in the DOM
+function refreshTaskSection(){
+    deletingAllTasks();
+    generationTasklist()
     generationImportantTasksFromLocalStorage(importantTasksArray)
 }
 
 //Fucntion of search input that do refresh of all tasks and sort to you all tasks that include text from input area
 function searchTasks(){
-    const input = document.getElementById("search")
-    const valueInInput = input.value.toLowerCase()
+    const valueInInput = document.getElementById("search").value.toLowerCase()
     refreshTaskSection();
     const allTasks = document.querySelectorAll(".task")
     for(let task of allTasks){
@@ -193,42 +187,63 @@ function searchTasks(){
     }
 }
 
-//Fucntion of save tasks in API Storage
-async function saveToStorage(){
-    displayLoading();
 
-    const response = await fetch("https://json-bins.herokuapp.com/bin/614ee0bfc092dca86cb87689", { //send request to API
-        method: "PUT" ,
-        headers: {
-            'Accept': "application/json" ,
-            'Content-Type': "application/json",
-        },
-        body: JSON.stringify({"tasks": localStorageObject})
-    })
+const TASKS_API_URI = 'https://json-bins.herokuapp.com/bin/6162f1049e72744bcfc40980';
 
-    hideLoading();
+async function request(method = '', data = null) {
+    const options = {
+      method: method,
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    };
+  
+    if (data) {
+      options.body = JSON.stringify(data);
+    }
 
+    const response = await fetch(TASKS_API_URI, options);
+    errorCatch(response);
+    return response.json();
+}
+  
+async function loadTasksFromApi() {
+    const loaded = await request('GET', null);
+
+    return loaded.tasks;
+}
+  
+async function saveTasksToApi(tasks) {
+    return request('PUT', {tasks});
+}
+
+function errorCatch(response){
     if(!response.ok){ // error part: behavior of all elements in error situation anf throw ERROR with current status
         alert("ERROR "+response.status+". "+response.statusText)//displaying in result element at error message
         throw `ERROR ${response.status}`
     }
-    
+}
+
+//Fucntion of save tasks in API Storage
+async function saveToStorage(){
+    displayLoading();
+
+    const tasks = getFromStorage()
+    await saveTasksToApi(tasks)
+   
+    hideLoading();
 }
 
 ////Fucntion of loading tasks from API Storage if in localStorage we have other tasks function refreshes localStorage information to API information 
 async function loadFromStorage(){
     displayLoading();
-    const response =await fetch("https://json-bins.herokuapp.com/bin/614ee0bfc092dca86cb87689")
-    if(!response.ok){ // error part: behavior of all elements in error situation anf throw ERROR with current status
-        alert("ERROR "+response.status+". "+response.statusText)//displaying in result element at error message
-        throw `ERROR ${response.status}`
-    }
-    hideLoading();
-    const tasksOBjectFromStorage=(await response.json()).tasks
-    localStorageObject=tasksOBjectFromStorage;
-    localStorage.tasks=JSON.stringify(localStorageObject);
+
+    const tasks = await loadTasksFromApi()
+    updateStorage(tasks);
     refreshTaskSection();
-    
+
+    hideLoading();
 }
 
 //Starting drag event
@@ -328,6 +343,16 @@ let localStorageObject = {
     "in-progress":[],
     "done":[],
 }
+
+function updateStorage(tasks) {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+}
+  
+  
+function getFromStorage() {
+    return JSON.parse(localStorage.getItem('tasks'));
+}
+
 let importantTasksArray = [];
 
 if(localStorage.getItem("tasks") === null){
@@ -338,11 +363,14 @@ if(localStorage.getItem("tasks") === null){
 } else {
     importantTasksArray = JSON.parse(localStorage.getItem("important"));
     localStorageObject = JSON.parse(localStorage.getItem("tasks"));
-    generationTasklistFromLocalStorage(localStorageObject);
+    generationTasklist();
     generationImportantTasksFromLocalStorage(importantTasksArray)
 }
 
-document.querySelector("main").addEventListener("click", addTaskClickEvent)
+const addButtons=document.querySelectorAll(".add-button")
+for(const button of addButtons){
+    button.addEventListener("click", addTaskClickEvent)
+}
 document.getElementById("search").addEventListener("input", searchTasks)
 document.getElementById("save-btn").addEventListener("click", saveToStorage)
 document.getElementById("load-btn").addEventListener("click", loadFromStorage)
