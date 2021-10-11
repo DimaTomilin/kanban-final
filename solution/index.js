@@ -1,3 +1,11 @@
+/*
+*
+*
+DOM
+*
+*
+*/
+
 //Generit function of creating DOM element with all children, classes etc.
 function createElement(tagName, children = [], classes = [], attributes = {}, eventListeners = {}) {
     let el = document.createElement(tagName)
@@ -20,6 +28,124 @@ function createElement(tagName, children = [], classes = [], attributes = {}, ev
     return  el
 }
 
+// Function of creating structure of all <li> elements with argument of value
+function createNewTaskElement(value){
+    const starIconElement=createElement("i",[],["fa", "fa-star"],{},{"click": toggleToImportantTasks})
+    const textElement=createElement("div",[value]) //Adding div element to more comfortable using with other functions
+    const newTasklement=createElement("li", [textElement, starIconElement],["task"],{draggable:"true"},{"dblclick": dblclickEditTaskEvent, "mouseover": replaceOfTask, "dragstart": dragEvent})
+    return newTasklement;
+}
+
+//Fucntion of creating all tasks element from localStorage
+function generationTasklist(){
+    const allTasks = getTasksFromStorage()
+
+    for(const [taskType, taskList] of Object.entries(allTasks)){
+        const taskListElement = document.querySelector(`[data-type=${taskType}]`).closest("section").querySelector("ul");
+        
+        taskList.forEach(function(task) {
+            taskListElement.appendChild(createNewTaskElement(task));
+        });
+    }
+}
+
+//Deleting all task from DOM
+function deletingAllTasks(){
+    const allListsOfTasks = document.querySelectorAll("ul")
+    for(let list of allListsOfTasks){
+        while (list.firstChild) {
+            list.removeChild(list.firstChild);
+        }
+    }
+}
+
+//Refresh of all tasks in the DOM
+function refreshTaskSection(){
+    deletingAllTasks();
+    generationTasklist()
+    generationImportantTasksFromLocalStorage(importantTasksArray)
+}
+
+
+
+/*
+*
+*
+Network
+*
+*
+*/
+
+
+
+
+/*
+*
+*
+Storage
+*
+*
+*/
+
+function updateTasksInLocalStorage(tasks) {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+}
+  
+  
+function getTasksFromStorage() {
+    return JSON.parse(localStorage.getItem('tasks'));
+}
+
+function updateImportantTasksInLocalStorage(tasks) {
+    localStorage.setItem('important', JSON.stringify(tasks));
+}
+  
+  
+function getImportantTasksFromStorage() {
+    return JSON.parse(localStorage.getItem('important'));
+}
+
+//Changing task in task section in LocalStorage
+function changingTaskInLocalStorage(task, newTask){
+    const tasks = getTasksFromStorage();
+
+    for(const [taskType, taskList] of Object.entries(tasks)){ 
+        if(taskList.includes(task)){
+            taskList[taskList.indexOf(task)] = validateTask(newTask);
+        }
+    }
+
+    updateTasksInLocalStorage(tasks);
+}
+
+//Changing task in important section of LocalStorage
+function changingImportantTask(task, newTask){
+    const importantTasks = getImportantTasksFromStorage();
+    if(importantTasks.includes(task)){ //Check if edited task was in important tasks and change it in the array
+        importantTasks[importantTasks.indexOf(task)] = newTask;
+        updateImportantTasksInLocalStorage(importantTasks)
+    }
+}
+
+
+
+/*
+*
+*
+Derictives
+*
+*
+*/
+
+//Check task format 
+function validateTask(taskText) {
+    if (typeof taskText === 'string' && taskText.length) {
+      return taskText;
+    }
+    
+    throw Error('Invalid Task');
+}
+
 //Displaying of loader element
 function displayLoading(){
     loaderElement.classList.add("loader")
@@ -30,29 +156,12 @@ function hideLoading(){
     loaderElement.classList.remove("loader")
 }
 
-// Function of creating structure of all <li> elements with argument of value
-function createNewTaskElement(value){
-    const starIconElement=createElement("i",[],["fa", "fa-star"],{},{"click": toggleToImportantTasks})
-    const textElement=createElement("div",[value]) //Adding div element to more comfortable using with other functions
-    const newTasklement=createElement("li", [textElement, starIconElement],["task"],{draggable:"true"},{"dblclick": dblclickEditTaskEvent, "mouseover": replaceOfTask, "dragstart": dragEvent})
-    return newTasklement;
-}
-
-function validateTask(taskText = '') {
-    if (typeof taskText === 'string' && taskText.length) {
-      return taskText;
-    }
-  
-    throw Error('Invalid Task');
-}
-
-function updateTasks(task, taskType){
-   const currentTasks = getFromStorage();
-
-   currentTasks[taskType].unshift(validateTask(task));
-   updateStorage(currentTasks);
-
-   refreshTaskSection(currentTasks);
+//Function that make task text editable and after unfocus saves changes
+function dblclickEditTaskEvent(event){
+    event.preventDefault();
+    
+    const targetElement = event.target
+    makingEditable(targetElement);
 }
 
 //Function of event listener that addes new task to target list
@@ -62,50 +171,62 @@ function addTaskClickEvent(event) {
 
     updateTasks(input.value, taskType);
     input.value = "";
-    
 }
 
-//Fucntion of creating all tasks element from localStorageObject that my object of localStorage
-function generationTasklist(){
-    const allTasks = getFromStorage()
-    for(const [taskType, taskList] of Object.entries(allTasks)){
-        const taskListElement = document.querySelector(`[data-type=${taskType}]`).closest("section").querySelector("ul");
-        
-        taskList.forEach(function(task) {
-            taskListElement.appendChild(createNewTaskElement(task));
-        });
-    }
+
+
+
+/*
+*
+*
+Tasks
+*
+*
+*/
+
+function updateTasks(task, taskType){
+   const currentTasks = getTasksFromStorage();
+
+   currentTasks[taskType].unshift(validateTask(task));
+   updateTasksInLocalStorage(currentTasks);
+
+   refreshTaskSection(currentTasks);
 }
-
-//Function that make task text editable and after unfocus saves of changes
-function dblclickEditTaskEvent(event){
-    event.preventDefault();
-
-    const targetElement = event.target
-    let valueOfItem = targetElement.innerText
-    targetElement.setAttribute("contenteditable","true") //Making text editable
-
-    targetElement.addEventListener("blur", ()=>{ //Handler moment of click on other element
-        if(targetElement.innerText === ""){ //Check if edited task isn`t empty
-            alert("You can`t save empty task");
-            targetElement.innerText = valueOfItem; //Return value that was 
-            targetElement.setAttribute("contenteditable","false")
+ 
+function makingEditable(element){
+    let valueOfItem = element.innerText
+    element.setAttribute("contenteditable","true") //Making text editable
+    savingChanges(element, valueOfItem)
+}
+ 
+function savingChanges(element, valueOfElement){
+    element.addEventListener("blur", ()=>{ //Handler moment of click on other element
+        try{
+            changingTask(valueOfElement, element.innerText)
+            element.setAttribute("contenteditable","false")
+        } catch (e) {
+            element.innerText = valueOfElement; //Return value that was 
+            element.setAttribute("contenteditable","false")
             return;
         }
-        if(importantTasksArray.includes(valueOfItem)){ //Check if edited task was in important tasks and change it in the array
-            importantTasksArray[importantTasksArray.indexOf(valueOfItem)] = targetElement.innerText
-            localStorage.important = JSON.stringify(importantTasksArray)
-        }
-        for(const section in localStorageObject){ //Change edited task in localStorageObject
-            let propertyArray = localStorageObject[section]
-            if(propertyArray.includes(valueOfItem)){
-                propertyArray[propertyArray.indexOf(valueOfItem)] = targetElement.innerText
-            }
-        }
-        localStorage.tasks = JSON.stringify(localStorageObject) //Updating of localStorage
-        targetElement.setAttribute("contenteditable","false")
     })
 }
+ 
+function changingTask(task, newTask){
+    changingTaskInLocalStorage(task, newTask)
+    changingImportantTask(task, newTask);
+}
+
+
+
+
+
+
+
+
+
+
+
 
 //Removing of replaced task element from old localStorage section
 function removeReplacingElement(elementValue){
@@ -157,22 +278,7 @@ function replaceOfTask (event) {
     };
 }
 
-//Deleting all task from DOM
-function deletingAllTasks(){
-    const allListsOfTasks = document.querySelectorAll("ul")
-    for(let list of allListsOfTasks){
-        while (list.firstChild) {
-            list.removeChild(list.firstChild);
-        }
-    }
-}
 
-//Refresh of all tasks in the DOM
-function refreshTaskSection(){
-    deletingAllTasks();
-    generationTasklist()
-    generationImportantTasksFromLocalStorage(importantTasksArray)
-}
 
 //Fucntion of search input that do refresh of all tasks and sort to you all tasks that include text from input area
 function searchTasks(){
@@ -229,7 +335,7 @@ function errorCatch(response){
 async function saveToStorage(){
     displayLoading();
 
-    const tasks = getFromStorage()
+    const tasks = getTasksFromStorage()
     await saveTasksToApi(tasks)
    
     hideLoading();
@@ -240,7 +346,7 @@ async function loadFromStorage(){
     displayLoading();
 
     const tasks = await loadTasksFromApi()
-    updateStorage(tasks);
+    updateTasksInLocalStorage(tasks);
     refreshTaskSection();
 
     hideLoading();
@@ -344,14 +450,7 @@ let localStorageObject = {
     "done":[],
 }
 
-function updateStorage(tasks) {
-    localStorage.setItem('tasks', JSON.stringify(tasks));
-}
-  
-  
-function getFromStorage() {
-    return JSON.parse(localStorage.getItem('tasks'));
-}
+
 
 let importantTasksArray = [];
 
