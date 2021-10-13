@@ -14,7 +14,7 @@
     <h1 id="page-title">My tasks bord</h1>
     <input id="search" type="text" placeholder="Search task..."></input>
     <main>
-        <section class="dropzone" >
+        <section class="dropzone" data-type="todo">
             <div>
                 <h2>Tasks I need to do</h2>
                 <ul class="to-do-tasks">
@@ -22,10 +22,10 @@
             </div>
             <div>
                 <input id="add-to-do-task" type="text" placeholder="Add task..."></input>
-                <button id="submit-add-to-do">Submit</button>
+                <button id="submit-add-to-do" class="add-button">Submit</button>
             </div>
         </section>
-        <section class="dropzone" >
+        <section class="dropzone" data-type="in-progress">
             <div>
                 <h2>Tasks in progress</h2>
                 <ul class="in-progress-tasks">
@@ -33,10 +33,10 @@
             </div>
             <div>
                 <input id="add-in-progress-task" type="text" placeholder="Add task..."></input>
-                <button id="submit-add-in-progress">Submit</button>
+                <button id="submit-add-in-progress" class="add-button">Submit</button>
             </div>
         </section>
-        <section class="dropzone" >
+        <section class="dropzone" data-type="done">
             <div>
                 <h2>Done tasks</h2>
                 <ul class="done-tasks">
@@ -44,7 +44,7 @@
             </div>
             <div>
                 <input id="add-done-task" type="text" placeholder="Add task..."></input>
-                <button id="submit-add-done">Submit</button>
+                <button id="submit-add-done"  class="add-button">Submit</button>
             </div>
         </section>
     </main>
